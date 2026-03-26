@@ -107,11 +107,9 @@ UBYTE Image_Buffer[IMAGE_BUFFER_SIZE];
 
 void DisplayCustomImage(void)
 {
-    Paint_NewImage(Image_Buffer, IMAGE_WIDTH, IMAGE_HEIGHT, ROTATE_0, WHITE);
-    Paint_SelectImage(Image_Buffer);
-    Paint_Clear(WHITE); 
-    Paint_DrawBitMap(gImage_heavy_rain_32);
-    EPD_2IN13_V2_Display(Image_Buffer);
+    // Hàm này hiện không được dùng trong display loop
+    // Ảnh được upload trực tiếp vào epd_buffer qua BLE (lệnh 0x02/0x03/0x01)
+    // display() pipeline sẽ hiển thị nội dung epd_buffer đó
 }
 
 // Display functions moved to separate components
@@ -158,8 +156,12 @@ void do_display_update_with_analog_clock(void)
             break;
         
         case DISPLAY_MODE_IMAGE:
-            DisplayCustomImage();
-            break;
+            // KHÔNG vẽ gì vào epd_buffer!
+            // epd_buffer đã chứa ảnh được upload qua BLE (lệnh 0x02/0x03)
+            // display() pipeline sẽ hiển thị đúng nội dung đó
+            // Skip luôn phần vẽ pin phía dưới bằng cách return sớm
+            arch_printf("IMAGE mode: display raw epd_buffer\n");
+            return;
                 
         case DISPLAY_MODE_CALENDAR:
             draw_calendar_page(current_unix_time);
@@ -415,44 +417,19 @@ void user_svc1_led_wr_ind_handler(ke_msg_id_t const msgid,
     const uint8_t *payload = param->value;
     uint16_t payload_len = param->length;
     uint8_t out_buffer[20] = {0};
-    if (step != 0)
-    {
-        out_buffer[0] = 0x00;
-        out_buffer[1] = 0x00;
-        bls_att_pushNotifyData(SVC1_IDX_LED_STATE_VAL, out_buffer, 2);
-        return;
-    }
-    switch (param->value[0])
-    {
-    // Xóa màn hình EPD.
-    case 0x00:
-        ASSERT_MIN_LEN(payload_len, 2);
-        // memset(epd_buffer, payload[1], epd_buffer_size);
-        // memset(epd_temp, payload[1], epd_buffer_size);
 
-        return;
-    // Đẩy buffer lên màn hình để hiển thị.
-    case 0x01:
-        // EPD_Display(epd_buffer, epd_temp, epd_buffer_size, payload[1]);
-        arch_printf("start EPD_Display\r\n");
-        imgheader.signature[0] = IMG_HEADER_SIGNATURE1;
-        imgheader.signature[1] = IMG_HEADER_SIGNATURE2;
-        imgheader.CRC = 0xFFFFFFFF;
-        imgheader.CRC = crc32(imgheader.CRC, epd_buffer, sizeof(epd_buffer));
-        imgheader.CRC ^= 0xFFFFFFFF;
-        imgheader.code_size = sizeof(epd_buffer);
-        imgheader.validflag = 0;
-        step = 1;
-
-        app_easy_timer(APP_PERIPHERAL_CTRL_TIMER_DELAY, display);
-        return;
-    // Đặt byte_pos (vị trí ghi dữ liệu).
-    case 0x02:
+    // Lệnh 0x02 và 0x03: set IMAGE mode và ghi data người dùng - bypass guard step
+    if (param->value[0] == 0x02)
+    {
         ASSERT_MIN_LEN(payload_len, 3);
         byte_pos = payload[1] << 8 | payload[2];
+        // Set IMAGE mode ngay khi bắt đầu upload để minute timer không overwrite epd_buffer
+        current_display_mode = DISPLAY_MODE_IMAGE;
+        arch_printf("Upload start: IMAGE protected, byte_pos=%d\n", byte_pos);
         return;
-    // Ghi dữ liệu vào buffer hình ảnh.
-    case 0x03:
+    }
+    if (param->value[0] == 0x03)
+    {
         if ((payload[2] << 8 | payload[3]) + payload_len - 4 >= epd_buffer_size + 1)
         {
             out_buffer[0] = 0x00;
@@ -468,6 +445,47 @@ void user_svc1_led_wr_ind_handler(ke_msg_id_t const msgid,
         out_buffer[1] = payload_len & 0xff;
         bls_att_pushNotifyData(SVC1_IDX_LED_STATE_VAL, out_buffer, 2);
         return;
+    }
+    // Lệnh 0x01: trigger display - bypass guard, hủy pipeline cũ nếu đang chạy
+    if (param->value[0] == 0x01)
+    {
+        arch_printf("start EPD_Display, step=%d\r\n", step);
+        if (step != 0)
+        {
+            app_easy_timer_cancel(timer_used);
+            step = 0;
+            arch_printf("Cancelled old pipeline, forcing IMAGE display\r\n");
+        }
+        imgheader.signature[0] = IMG_HEADER_SIGNATURE1;
+        imgheader.signature[1] = IMG_HEADER_SIGNATURE2;
+        imgheader.CRC = 0xFFFFFFFF;
+        imgheader.CRC = crc32(imgheader.CRC, epd_buffer, sizeof(epd_buffer));
+        imgheader.CRC ^= 0xFFFFFFFF;
+        imgheader.code_size = sizeof(epd_buffer);
+        imgheader.validflag = 0;
+        current_display_mode = DISPLAY_MODE_IMAGE;
+        last_update_time = current_unix_time;
+        is_part = 0;
+        step = 1;
+        app_easy_timer(APP_PERIPHERAL_CTRL_TIMER_DELAY, display);
+        return;
+    }
+
+    // Các lệnh khác cần EPD rảnh (step == 0)
+    if (step != 0)
+    {
+        out_buffer[0] = 0x00;
+        out_buffer[1] = 0x00;
+        bls_att_pushNotifyData(SVC1_IDX_LED_STATE_VAL, out_buffer, 2);
+        return;
+    }
+    switch (param->value[0])
+    {
+    // Xóa màn hình EPD.
+    case 0x00:
+        ASSERT_MIN_LEN(payload_len, 2);
+        return;
+    // 0x01, 0x02, 0x03 đã được xử lý bên trên (bypass guard step!=0)
     case 0x04: // Giải mã và hiển thị hình ảnh TIFF
         // param_update_request(1);
         return;
@@ -521,6 +539,9 @@ void user_svc1_led_wr_ind_handler(ke_msg_id_t const msgid,
         if (payload_len >= 2)
         {
             uint8_t mode_idx = payload[1];
+            // Mapping app-level: đúng với những gì app gửi
+            // 0x00=IMAGE, 0x01=CALENDAR, 0x02=TIME
+            // 0x03=CALENDAR_ANALOG, 0x04=CLOCK, 0x05=FABRIC_RECORD
             if (mode_idx == 0x00) current_display_mode = DISPLAY_MODE_IMAGE;
             else if (mode_idx == 0x01) current_display_mode = DISPLAY_MODE_CALENDAR;
             else if (mode_idx == 0x02) current_display_mode = DISPLAY_MODE_TIME;
@@ -528,9 +549,12 @@ void user_svc1_led_wr_ind_handler(ke_msg_id_t const msgid,
             else if (mode_idx == 0x04) current_display_mode = DISPLAY_MODE_CLOCK;
             else if (mode_idx == 0x05) current_display_mode = DISPLAY_MODE_FABRIC_RECORD;
             
-            // Lưu ý: Lệnh E1 thường được theo sau bởi lệnh E2 để cập nhật màn hình
-            // Nhưng ta vẫn cập nhật trạng thái hiển thị ở đây
-            last_update_time = 0; 
+            last_update_time = 0;
+            do_display_update_with_analog_clock();
+            is_part = 0;
+            step = 1;
+            display();
+            arch_printf("E1: mode_idx=%d, display_mode=%d\n", mode_idx, current_display_mode);
         }
         break;
     default:
@@ -648,10 +672,13 @@ void user_svc2_wr_ind_handler(ke_msg_id_t const msgid,
     }
     else if (param->value[0] == 0xE1)
     {
-        // Thêm mới: Chuyển sang chế độ hiển thị kèm chỉ số (từ app)
+        // Chuyển sang chế độ hiển thị kèm chỉ số (từ app)
         if (param->length >= 2)
         {
             uint8_t mode_idx = param->value[1];
+            // Mapping app-level: đúng với những gì app gửi
+            // 0x00=IMAGE, 0x01=CALENDAR, 0x02=TIME
+            // 0x03=CALENDAR_ANALOG, 0x04=CLOCK, 0x05=FABRIC_RECORD
             if (mode_idx == 0x00) current_display_mode = DISPLAY_MODE_IMAGE;
             else if (mode_idx == 0x01) current_display_mode = DISPLAY_MODE_CALENDAR;
             else if (mode_idx == 0x02) current_display_mode = DISPLAY_MODE_TIME;
@@ -660,7 +687,11 @@ void user_svc2_wr_ind_handler(ke_msg_id_t const msgid,
             else if (mode_idx == 0x05) current_display_mode = DISPLAY_MODE_FABRIC_RECORD;
             
             last_update_time = 0;
-            arch_printf("Switched to mode index: %d\n", mode_idx);
+            do_display_update_with_analog_clock();
+            is_part = 0;
+            step = 1;
+            display();
+            arch_printf("E1: mode_idx=%d, display_mode=%d\n", mode_idx, current_display_mode);
         }
     }
 }
