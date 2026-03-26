@@ -1,38 +1,32 @@
 # DA14585_2.9
 
-#### 介绍
-da14585主控2.9 黑白京付价签 原板直接改
+#### Giới thiệu
+Dự án chỉnh sửa trực tiếp từ bo mạch gốc của thẻ giá điện tử màn hình đen trắng 2.13 inch, sử dụng chip điều khiển chính là DA14585.
 
-#### 软件架构
-软件架构说明
-基于SDK_6.0.18.1182.1的ble ota例子修改
-
-
-#### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+#### Kiến trúc phần mềm
+Được chỉnh sửa dựa trên ví dụ ble_ota trong bộ SDK_6.0.18.1182.1.
 
 
-#### 特技
+#### Hướng dẫn cài đặt
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+1.  Tải và cài đặt Keil uVision5.
+2.  Tải bộ SDK_6.0.18.1182.1 từ trang chủ Renesas (Dialog).
+3.  Mở project trong thư mục liên quan và biên dịch.
+
+#### Hướng dẫn sử dụng
+
+1.  Nạp firmware thông qua giao diện J-Link (SWD).
+2.  Sử dụng ứng dụng di động hỗ trợ chuẩn OTA của Dialog để cập nhật phần mềm từ xa.
+3.  Cấu hình hiển thị cho màn hình e-paper 2.9 inch.
+
+#### Đóng góp
+
+1.  Dev kho lưu trữ này.
+2.  Tạo nhánh mới: Dev_xxx.
+3.  Commit mã nguồn của bạn.
+4.  Tạo Pull Request (PR).
+
+
+#### Tiện ích hỗ trợ
+
+1.  Sử dụng Readme\_XXX.md để hỗ trợ các ngôn ngữ khác nhau, ví dụ: Readme\_en.md, Readme\_zh.md
