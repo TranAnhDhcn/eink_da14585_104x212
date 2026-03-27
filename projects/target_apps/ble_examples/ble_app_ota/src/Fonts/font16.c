@@ -1,15 +1,4 @@
-/**
- ******************************************************************************
- * @file    font16.c
- * @author  MCD Application Team
- * @version V1.0.0
- * @date    18-February-2014
- * @brief   This file provides text font16 for STM32xx-EVAL's LCD driver.
- ******************************************************************************
- */
-
 #include "fonts.h"
-
 //  Font data for Courier New 16pt
 
 const uint8_t EPD_ASCII_11X16[]={
@@ -396,4 +385,3 @@ const uint8_t EPD_ASCII_11X16[]={
 
 
 };
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
