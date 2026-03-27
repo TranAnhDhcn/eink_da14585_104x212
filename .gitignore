@@ -4,3 +4,6 @@ projects/target_apps/ble_examples/ble_app_ota/Keil_5/JLinkLog.txt
 /projects/target_apps/ble_examples/ble_app_ota/Keil_5
 /DA1458x_SUOTA_Multipart_Binary_Generator_v0.3/input
 /DA1458x_SUOTA_Multipart_Binary_Generator_v0.3/output
+DA1458x_SUOTA_Multipart_Binary_Generator_v0.3/output/fw_1.bin
+DA1458x_SUOTA_Multipart_Binary_Generator_v0.3/output/fw_image_1.img
+DA1458x_SUOTA_Multipart_Binary_Generator_v0.3/output/fw_multi_part_spi.bin
