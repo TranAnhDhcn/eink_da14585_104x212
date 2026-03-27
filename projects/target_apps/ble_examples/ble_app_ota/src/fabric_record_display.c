@@ -38,58 +38,58 @@ void draw_fabric_record_page(const fabric_record_t* record, bool force_redraw)
 
     // ===== 1. TITLE =====
     EPD_DrawUTF8(5, 1, 0, "FABRIC RELAXING RECORD",
-        EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+        EPD_ASCII_11X16, 0, BLACK, WHITE);
 
     // ===== 2. LEFT COLUMN =====
     int y = 20;
     int line = 15;
 
     sprintf(buf, "Width: %s", record->width);
-    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "PO: %s", record->po);
-    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "Item: %s", record->item);
-    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "Lot: %s", record->lot);
-    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(5, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
 
     // ===== 3. RIGHT COLUMN =====
     y = 20;
 
     sprintf(buf, "NV xa: %s", record->staff);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "Xa luc: %s", record->relax_date);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "OK luc: %s", record->ok_date);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "Color: %s", record->color);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "Buy: %s", record->buy);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "Roll: %s", record->roll);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     y += line;
 
     sprintf(buf, "YDS: %s", record->yds);
-    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    EPD_DrawUTF8(120, y, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
 
     // ===== 4. FOOTER =====
     EPD_DrawUTF8(90, 105, 0, record->note,
-        EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+        EPD_ASCII_11X16, 0, BLACK, WHITE);
 }

@@ -1,130 +1,76 @@
-/**
- ****************************************************************************************
- *
- * @file calendar_display_modified.c
- *
- * @brief Modified calendar display with analog clock functionality
- *
- ****************************************************************************************
- */
-
 #include "calendar_display.h"
+#include "EPD_2in13_V2.h"
 #include "analog_clock.h"
 #include "GUI_Paint.h"
 #include "etime.h"
 #include "fonts.h"
-
-// Bảng số ngày trong tháng (năm thường và năm nhuận)
+#include <stdio.h>
+extern uint8_t epd_buffer[];
+// Bảng số ngày trong tháng
 static const uint8_t days_in_month[2][12] = {
-    {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}, // Năm thường
-    {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}  // Năm nhuận
+    {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+    {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 };
 
-// Tên các thứ trong tuần
-static const char* week_names_vi[] = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
-
-/**
- * @brief Lấy thứ của ngày đầu tiên trong tháng
- * @param year Năm
- * @param month Tháng (1-12)
- * @return Thứ trong tuần (0=Chủ Nhật, 1=Thứ Hai, ..., 6=Thứ Bảy)
- */
-static uint8_t get_first_day_of_month(uint16_t year, uint8_t month)
-{
+static uint8_t get_first_day_of_month(uint16_t year, uint8_t month) {
     return day_of_week_get(month, 1, year);
 }
 
-/**
- * @brief Lấy số ngày trong tháng
- * @param year Năm
- * @param month Tháng (1-12)
- * @return Số ngày của tháng đó
- */
-static uint8_t get_days_in_month(uint16_t year, uint8_t month)
-{
+static uint8_t get_days_in_month(uint16_t year, uint8_t month) {
     uint8_t leap = is_leap(year);
     return days_in_month[leap][month - 1];
 }
 
 /**
- * @brief Vẽ tiêu đề lịch (năm tháng)
- * @param year Năm
- * @param month Tháng
+ * @brief Vẽ khung và tiêu đề các thứ
  */
-static void draw_calendar_title(uint16_t year, uint8_t month)
-{
-    char title_buf[20];
-    sprintf(title_buf, "%d / %d", year, month);
-    
-    // Hiển thị tiêu đề căn giữa ở đầu màn hình
-    EPD_DrawUTF8(20, 2, 0, title_buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+static void draw_layout_and_header(void) {
+    // Vẽ viền ngoài
+    Paint_DrawRectangle(1, 1, 212, 104, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+    // Vẽ đường kẻ dọc (x=125)
+    Paint_DrawLine(125, 1, 125, 104, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+    // Vẽ nền đen cho tiêu đề thứ
+    Paint_DrawRectangle(2, 2, 124, 18, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+    const char* weeks[] = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
+    for (uint8_t i = 0; i < 7; i++) {
+        // Căn chỉnh tọa độ x để các thứ nằm đều nhau
+        EPD_DrawUTF8(5 + (i * 17), 4, 0, weeks[i], EPD_ASCII_7X12, 0, WHITE, BLACK);
+    }
 }
 
 /**
- * @brief Vẽ dòng tiêu đề các thứ trong tuần
+ * @brief Vẽ lưới ngày tháng (Sửa lỗi không hiện ngày)
  */
-static void draw_week_header(void)
-{
-    uint8_t x_start = 10;
-    uint8_t y_pos = 20;
-    uint8_t cell_width = 16;
-    
-    for (uint8_t i = 0; i < 7; i++)
-    {
-        uint8_t x_pos = x_start + i * cell_width;
-        EPD_DrawUTF8(x_pos + 8, y_pos, 0, week_names_vi[i], EPD_ASCII_7X12, EPD_FontUTF8_16x16, BLACK, WHITE);
-    }
-}
- 
-/**
- * @brief Vẽ các con số ngày
- * @param year Năm
- * @param month Tháng
- * @param current_day Ngày hiện tại (dùng để làm nổi bật)
- */
-static void draw_calendar_dates(uint16_t year, uint8_t month, uint8_t current_day)
-{
-    uint8_t x_start = 10;
-    uint8_t y_start = 40;
-    uint8_t cell_width = 20;
-    uint8_t cell_height = 10;
-    
+static void draw_calendar_grid(uint16_t year, uint8_t month, uint8_t current_day) {
     uint8_t first_day = get_first_day_of_month(year, month);
     uint8_t days_count = get_days_in_month(year, month);
     
+    uint8_t x_start = 5;
+    uint8_t y_start = 22;
+    uint8_t cell_w = 17;
+    uint8_t cell_h = 13;
+    
     char day_buf[3];
     uint8_t row = 0;
-    uint8_t col = first_day; // Bắt đầu từ thứ tương ứng của ngày đầu tiên
-    
-    for (uint8_t day = 1; day <= days_count; day++)
-    {
-        uint8_t x_pos = x_start + col * cell_width + 8;
-        uint8_t y_pos = y_start + row * cell_height + 2;
+    uint8_t col = first_day;
+
+    for (uint8_t day = 1; day <= days_count; day++) {
+        uint8_t x_pos = x_start + (col * cell_w);
+        uint8_t y_pos = y_start + (row * cell_h);
         
         sprintf(day_buf, "%d", day);
         
-        // Nếu là ngày hiện tại, sử dụng hiển thị nghịch màu
-        if (day == current_day)
-        {
-            // Vẽ hình chữ nhật nền
-            Paint_DrawRectangle(x_start + col * cell_width + 4, 
-                              y_start + row * cell_height + 3,
-                              x_start + (col + 1) * cell_width - 2,
-                              y_start + (row + 1) * cell_height+ 3,
-                              BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-            
-            // Phông chữ trắng
-            EPD_DrawUTF8(x_pos, y_pos, 0, day_buf, EPD_ASCII_7X12, 0, WHITE, BLACK);
-        }
-        else
-        {
-            // Phông chữ đen bình thường
-            EPD_DrawUTF8(x_pos, y_pos, 0, day_buf, EPD_ASCII_7X12, 0, BLACK, WHITE);
+        if (day == current_day) {
+            // Vẽ ô vuông đen cho ngày hiện tại
+            Paint_DrawRectangle(x_pos - 1, y_pos - 1, x_pos + 14, y_pos + 11, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+            EPD_DrawUTF8(x_pos + 1, y_pos, 0, day_buf, EPD_ASCII_7X12, 0, WHITE, BLACK);
+        } else {
+            EPD_DrawUTF8(x_pos + 1, y_pos, 0, day_buf, EPD_ASCII_7X12, 0, BLACK, WHITE);
         }
         
         col++;
-        if (col >= 7)
-        {
+        if (col >= 7) {
             col = 0;
             row++;
         }
@@ -132,82 +78,61 @@ static void draw_calendar_dates(uint16_t year, uint8_t month, uint8_t current_da
 }
 
 /**
- * @brief Vẽ trang lịch đầy đủ (phiên bản gốc, duy trì tính tương thích)
- * @param unix_time Dấu thời gian Unix hiện tại
+ * @brief Vẽ nội dung bên phải (Sửa lỗi không hiện tháng, chuyển giờ sang phải)
  */
-void draw_calendar_page(uint32_t unix_time)
-{
-    tm_t tm;
-    transformTime(unix_time, &tm);
+static void draw_right_panel(tm_t *tm) {
+    char buf[20];
     
-    uint16_t year = tm.tm_year + YEAR0;
-    uint8_t month = tm.tm_mon + 1;
-    uint8_t current_day = tm.tm_mday;
+    // 1. Hiển thị Năm - Tháng (Tọa độ 130, 2)
+    sprintf(buf, "%d-%02d", tm->tm_year + YEAR0, tm->tm_mon + 1);
+    EPD_DrawUTF8(130, 2, 0, buf, EPD_ASCII_7X12, 0, BLACK, WHITE);
+
     
-    // Xóa canvas
-    Paint_Clear(WHITE);
+    // 2. Hiển thị Ngày lớn (Căn giữa ô bên phải)
+    sprintf(buf, "%02d", tm->tm_mday);
+    // WHITE là màu nền, BLACK là màu chữ. 
+    // Màn hình bên phải từ X=125 đến 212 (rộng 87px). Chữ Font24 ~ 34px. 
+    // Đặt X=151 để căn giữa.
+		EPD_DrawUTF8(151, 22, 0, buf, EPD_ASCII_7X12, 0, BLACK, WHITE);
+
+    // 3. Hiển thị Giờ số (Đã chuyển sang phải - Tọa độ 140, 72)
+    sprintf(buf, "%02d:%02d", tm->tm_hour, tm->tm_min);
+    EPD_DrawUTF8(140, 72, 0, buf, EPD_ASCII_11X16, 0, BLACK, WHITE);
     
-    // Vẽ tiêu đề lịch
-    draw_calendar_title(year, month);
+    // 4. Nhiệt độ (Tọa độ 192, 80)
+    EPD_DrawUTF8(192, 80, 0, "29C", EPD_ASCII_7X12, 0, BLACK, WHITE);
     
-    // Vẽ dòng tiêu đề các thứ trong tuần
-    draw_week_header();
-    
-    // Vẽ lưới lịch
-    //draw_calendar_grid();
-    
-    // Vẽ các con số ngày
-    draw_calendar_dates(year, month, current_day);
-    
-    // Hiển thị thời gian hiện tại ở dưới cùng (định dạng số)
-    char time_buf[20];
-    sprintf(time_buf, "%02d:%02d", tm.tm_hour, tm.tm_min);
-    EPD_DrawUTF8(150, 110, 1, time_buf, EPD_ASCII_11X16, EPD_FontUTF8_16x16, BLACK, WHITE);
+    // 5. Năm âm lịch (Tọa độ 126, 87)
+    EPD_DrawUTF8(126, 87, 0, "Binh Ngo", EPD_ASCII_7X12, 0, BLACK, WHITE);
 }
 
-/**
- * @brief Vẽ trang lịch kèm đồng hồ kim (phiên bản mới)
- * @param unix_time Dấu thời gian Unix hiện tại
- * @param force_redraw Có bắt buộc vẽ lại đồng hồ hay không
- */
-
- /*
- void draw_calendar_page_with_analog_clock(uint32_t unix_time, bool force_redraw)
-{
+void draw_calendar_page(uint32_t unix_time, bool force_redraw) {
     tm_t tm;
     transformTime(unix_time, &tm);
-    
-    uint16_t year = tm.tm_year + YEAR0;
-    uint8_t month = tm.tm_mon + 1;
-    uint8_t current_day = tm.tm_mday;
-    
+
     if (force_redraw)
     {
-        // Xóa canvas khi vẽ lại hoàn toàn
+        Paint_NewImage(epd_buffer, EPD_2IN13_V2_WIDTH, EPD_2IN13_V2_HEIGHT, 270, WHITE);
+        Paint_SelectImage(epd_buffer);
+        Paint_SetMirroring(MIRROR_VERTICAL);
         Paint_Clear(WHITE);
-        
-        // Vẽ tiêu đề lịch
-        draw_calendar_title(year, month);
-        
-        // Vẽ dòng tiêu đề các thứ trong tuần
-        draw_week_header();
-        
-        // Vẽ lưới lịch
-        //draw_calendar_grid();
-        
-        // Vẽ các con số ngày
-        draw_calendar_dates(year, month, current_day);
+    }
+    else
+    {
+        Paint_SelectImage(epd_buffer);
+        Paint_SetMirroring(MIRROR_VERTICAL);
+        Paint_Clear(WHITE);
     }
     
-    // Vẽ đồng hồ kim ở bên phải (120x120 pixel)
-    // Điều chỉnh vị trí theo kích thước màn hình: màn hình rộng 290
-    uint16_t clock_x = 120; // Vị trí bên phải
-    uint16_t clock_y = 12;  // Căn giữa theo chiều dọc
-    uint16_t clock_size = 60;
+    // Vẽ khung và tiêu đề thứ
+    draw_layout_and_header();
     
-    draw_analog_clock(clock_x, clock_y, clock_size, unix_time, force_redraw);
+    // Vẽ lịch ngày tháng bên trái
+    draw_calendar_grid(tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
+    
+    // Vẽ thông tin chi tiết bên phải
+    draw_right_panel(&tm);
+    
+    // Thông tin bổ sung góc dưới trái (Ví dụ: Số ngày đếm ngược)
+    EPD_DrawUTF8(1, 87, 0, "GKD: 333 ngay", EPD_ASCII_7X12, 0, BLACK, WHITE);
 }
- */
-
-
- 

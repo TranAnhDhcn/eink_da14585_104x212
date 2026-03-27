@@ -164,7 +164,7 @@ void do_display_update_with_analog_clock(void)
             return;
                 
         case DISPLAY_MODE_CALENDAR:
-            draw_calendar_page(current_unix_time);
+            draw_calendar_page(current_unix_time, force_redraw || minute_changed);
             break;
             
         case DISPLAY_MODE_CALENDAR_ANALOG:
@@ -182,12 +182,20 @@ void do_display_update_with_analog_clock(void)
     }
     
 		// Vê giao dien pin dung chung
-		Paint_DrawRectangle(196, 4, 210, 11, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);  // Khung pin (14x7)
-		Paint_DrawRectangle(212, 6, 211, 10, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL); 		// Đầu cực
-		if (cur_batt_level > 0)		// 2. Ruột pin
-		{
-				Paint_DrawRectangle(198, 6, 198 + (cur_batt_level * 10 / 100), 10, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL); 				// chiều rộng fill ~10px
-		}
+		// 1. Khung pin (giữ nguyên)
+        Paint_DrawRectangle(196, 4, 210, 11, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
+
+        // 2. Đầu cực chuyển sang trái
+        Paint_DrawRectangle(194, 6, 195, 10, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+
+        // 3. Ruột pin (fill từ phải -> trái)
+        if (cur_batt_level > 0)
+        {
+            int width = (cur_batt_level * 10 / 100); // chiều dài fill
+
+            Paint_DrawRectangle(208 - width, 6, 208, 10,
+                                BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+        }
     
     // // 3. Hiển thị số bằng EPD_DrawUTF8 vào TRONG khung
     // sprintf(buf, "%d", cur_batt_level);
@@ -199,10 +207,10 @@ void do_display_update_with_analog_clock(void)
     // }
     
     // Hiển thị kết nối BLE (Sửa Y từ 150 về 1)
-    if (isconnected == 1)
-    {
-        EPD_DrawUTF8(200, 1, 0, "B", EPD_ASCII_7X12, 0, BLACK, WHITE);
-    }
+    // if (isconnected == 1)
+    // {
+    //     EPD_DrawUTF8(200, 1, 0, "B", EPD_ASCII_7X12, 0, BLACK, WHITE);
+    // }
 
     if (g_tm.tm_min == 0)
     {
@@ -270,8 +278,8 @@ void my_app_on_db_init_complete(void)
     CALLBACK_ARGS_0(user_default_app_operations.default_operation_adv)
     arch_printf("my_app_on_db_init_complete_modified\n");
     
-    // Khởi tạo chế độ hiển thị là hiển thị thời gian
-    current_display_mode = DISPLAY_MODE_TIME;
+    // Khởi tạo chế độ hiển thị mặc định (Tạm thời test lịch)
+    current_display_mode = DISPLAY_MODE_CALENDAR;
     last_update_time = 0;
     last_minute = 255;
     

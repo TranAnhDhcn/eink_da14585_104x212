@@ -61,9 +61,6 @@
           <button id="calendarAnalogModeBtn" disabled="" class="control-btn">
             Chế độ lịch + đồng hồ
           </button>
-          <button id="clockModeBtn" disabled="" class="control-btn">
-            Chế độ đồng hồ kim
-          </button>
           <button id="fabricRecordModeBtn" disabled="" class="control-btn">
             Chế độ thẻ kho
           </button>
@@ -255,7 +252,6 @@
       const calendarAnalogModeBtn = document.getElementById(
         "calendarAnalogModeBtn",
       );
-      const clockModeBtn = document.getElementById("clockModeBtn");
 
       // Các phần tử UI mới được thêm vào
       const canvasSize = document.getElementById("canvasSize");
@@ -424,10 +420,6 @@
           calendarAnalogModeBtn.disabled = true;
           calendarAnalogModeBtn.classList.remove("connected");
         }
-        if (clockModeBtn) {
-          clockModeBtn.disabled = true;
-          clockModeBtn.classList.remove("connected");
-        }
         if (fabricRecordModeBtn) {
           fabricRecordModeBtn.disabled = true;
           fabricRecordModeBtn.classList.remove("connected");
@@ -566,7 +558,6 @@
           if (timeModeBtn) timeModeBtn.disabled = false;
           if (calendarModeBtn) calendarModeBtn.disabled = false;
           if (calendarAnalogModeBtn) calendarAnalogModeBtn.disabled = false;
-          if (clockModeBtn) clockModeBtn.disabled = false;
           if (fabricRecordModeBtn) fabricRecordModeBtn.disabled = false;
 
           // Thêm lớp connected, thay đổi màu nút
@@ -576,7 +567,6 @@
           if (calendarModeBtn) calendarModeBtn.classList.add("connected");
           if (calendarAnalogModeBtn)
             calendarAnalogModeBtn.classList.add("connected");
-          if (clockModeBtn) clockModeBtn.classList.add("connected");
           if (fabricRecordModeBtn)
             fabricRecordModeBtn.classList.add("connected");
         } catch (e) {
@@ -622,7 +612,6 @@
         if (timeModeBtn) timeModeBtn.disabled = true;
         if (calendarModeBtn) calendarModeBtn.disabled = true;
         if (calendarAnalogModeBtn) calendarAnalogModeBtn.disabled = true;
-        if (clockModeBtn) clockModeBtn.disabled = true;
         if (fabricRecordModeBtn) fabricRecordModeBtn.disabled = true;
 
         // Xóa lớp connected, khôi phục màu nút ban đầu
@@ -632,7 +621,6 @@
         if (calendarModeBtn) calendarModeBtn.classList.remove("connected");
         if (calendarAnalogModeBtn)
           calendarAnalogModeBtn.classList.remove("connected");
-        if (clockModeBtn) clockModeBtn.classList.remove("connected");
         if (fabricRecordModeBtn)
           fabricRecordModeBtn.classList.remove("connected");
       };
@@ -761,26 +749,6 @@
         try {
           await sendCommand(0xe1, [3]);
           updateStatus("Chuyển sang Chế độ lịch + đồng hồ kim");
-
-          // Đợi 200ms rồi gửi lệnh cập nhật
-          await delay(200);
-          await sendCommand(0xe2); // Gửi lệnh cập nhật (0xE2)
-          updateStatus("Đã hoàn thành gửi lệnh cập nhật!");
-        } catch (e) {
-          updateStatus("Thao tác thất bại: " + e);
-        }
-      };
-
-      // Sự kiện nút Chế độ đồng hồ kim
-      clockModeBtn.onclick = async () => {
-        if (!characteristic) {
-          updateStatus("Vui lòng Kết nối thiết bị trước");
-          return;
-        }
-
-        try {
-          await sendCommand(0xe1, [4]);
-          updateStatus("Chuyển sang Chế độ đồng hồ kim toàn màn hình");
 
           // Đợi 200ms rồi gửi lệnh cập nhật
           await delay(200);
