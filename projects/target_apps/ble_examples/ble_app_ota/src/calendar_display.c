@@ -113,6 +113,7 @@ static void draw_right_panel(tm_t *tm) {
 void draw_calendar_page(uint32_t unix_time, bool force_redraw) {
   tm_t tm;
   transformTime(unix_time, &tm);
+  Paint_Clear(WHITE);
 
   // Vẽ khung và tiêu đề thứ
   draw_layout_and_header();
