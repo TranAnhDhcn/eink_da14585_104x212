@@ -19,9 +19,30 @@
 #include <stdio.h>
 #include <time.h>
 
-
 // External buffer defined in user_custs1_impl.c
 extern uint8_t epd_buffer[];
+
+static void draw_small_dot(uint16_t x, uint16_t y) {
+  Paint_SetPixel(x, y, BLACK);
+  Paint_SetPixel(x + 1, y, BLACK);
+  Paint_SetPixel(x, y + 1, BLACK);
+  Paint_SetPixel(x + 1, y + 1, BLACK);
+}
+
+static void draw_lunar_label(uint16_t x, uint16_t y) {
+  y -= 3;
+  EPD_DrawUTF8(x, y, 0, "Am lich:", EPD_ASCII_Font16, 0, BLACK, WHITE);
+
+  // Circumflex for 'A' in "Am"
+  Paint_SetPixel(x + 3, y + 2, BLACK);
+  Paint_SetPixel(x + 4, y + 1, BLACK);
+  Paint_SetPixel(x + 5, y + 0, BLACK);
+  Paint_SetPixel(x + 6, y + 1, BLACK);
+  Paint_SetPixel(x + 7, y + 2, BLACK);
+
+  // Dot below 'i' in "lich"
+  draw_small_dot(x + 48, y + 16);
+}
 
 /**
  * @brief Draw the digital time page (includes date, week, image, and lunar
@@ -51,21 +72,16 @@ void draw_time_page(uint32_t unix_time, bool force_redraw) {
   } else {
     Paint_SelectImage(epd_buffer);
     Paint_SetMirroring(MIRROR_VERTICAL);
-    // If not force_redraw, we might still want to clear specific areas or the
-    // whole screen In the original code, digital time mode always did a full
-    // refresh or part refresh For simplicity in this refactor, we usually do a
-    // full buffer rebuild
     Paint_Clear(WHITE);
   }
-
-  // 1. Draw Date (YYYY-MM-DD)
-  sprintf(buf, "%d-%02d-%02d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + YEAR0);
-  EPD_DrawUTF8(5, 1, 1, buf, EPD_ASCII_Font16, EPD_FontUTF8_16x16, BLACK,
-               WHITE);
-
-  // 2. Draw Day of Week
+	
+	  // 1. Draw Day of Week
   sprintf(buf, "%s", WEEK_VN[tm.tm_wday]);
-  EPD_DrawUTF8(5 + 125, 1, 1, buf, EPD_ASCII_Font16, EPD_FontUTF8_16x16, BLACK,
+	EPD_DrawUTF8(5, 1, 0, buf, EPD_ASCII_Font16, 0, BLACK, WHITE);
+
+  // 2. Draw Date (DD-MM-YYYY)
+  sprintf(buf, "%d-%02d-%02d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + YEAR0);
+  EPD_DrawUTF8(60, 1, 1, buf, EPD_ASCII_Font16, EPD_FontUTF8_16x16, BLACK,
                WHITE);
 
   // 3. Draw Digital Time
@@ -104,12 +120,10 @@ void draw_time_page(uint32_t unix_time, bool force_redraw) {
   struct Lunar_Date lunar;
   LUNAR_SolarToLunar(&lunar, tm.tm_year + YEAR0, tm.tm_mon + 1, tm.tm_mday);
   if (lunar.IsLeap) {
-    sprintf(buf2, "Am lich: %02d-%02d-%04d (N)", lunar.Date, lunar.Month,
-            lunar.Year);
+    sprintf(buf2, " %02d-%02d-%04d (N)", lunar.Date, lunar.Month, lunar.Year);
   } else {
-    sprintf(buf2, "Am lich: %02d-%02d-%04d", lunar.Date, lunar.Month,
-            lunar.Year);
+    sprintf(buf2, " %02d-%02d-%04d", lunar.Date, lunar.Month, lunar.Year);
   }
-  EPD_DrawUTF8(0, 90, 0, buf2, EPD_ASCII_Font16, EPD_FontUTF8_16x16, BLACK,
-               WHITE);
+  draw_lunar_label(0, 90);
+  EPD_DrawUTF8(84, 88, 0, buf2, EPD_ASCII_Font16, 0, BLACK, WHITE);
 }

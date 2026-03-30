@@ -86,6 +86,7 @@ extern cFONT Font12VI;
 extern cFONT Font24VI;
 
 extern const unsigned char Font12_Table[];
+extern const uint8_t EPD_FontUTF8_8x14_VN[];
 extern const uint8_t EPD_FontUTF8_16x16[];
 extern const uint8_t EPD_FontUTF8_24x24[];
 extern const uint8_t Font8_Table[];

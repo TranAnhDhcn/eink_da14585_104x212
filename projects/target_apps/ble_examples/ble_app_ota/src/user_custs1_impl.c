@@ -99,17 +99,17 @@ uint8_t isconnected __SECTION_ZERO("retention_mem_area0");
 tm_t g_tm __SECTION_ZERO("retention_mem_area0");
 uint8_t is_part __SECTION_ZERO("retention_mem_area0");
 static fabric_record_t current_fabric_record = {.width = "62/66 NEW",
-                                                .staff = "Tai",
+                                                .staff = "Thắng",
                                                 .po = "302J07",
                                                 .relax_date = "12/3 9h",
                                                 .ok_date = "14/3",
                                                 .item = "Tie: 0464",
-                                                .color = "Caviar",
+                                                .color = "Đỏ",
                                                 .lot = "4/296 6/985",
                                                 .buy = "1224",
                                                 .roll = "101",
                                                 .yds = "489",
-                                                .note = "T4"};
+                                                .note = "Vải ướt"};
 
 void bls_att_pushNotifyData(uint16_t attHandle, uint8_t *p, uint8_t len);
 void display(void);
@@ -302,7 +302,8 @@ void do_img_save(void) {
     spi_flash_peripheral_init();
     {
       const uint32_t total_size = sizeof(img_header_t) + epd_buffer_size;
-      const uint32_t erase_end = img_flash_payload_address + epd_buffer_size - 1;
+      const uint32_t erase_end =
+          img_flash_payload_address + epd_buffer_size - 1;
       uint32_t erase_addr;
       int8_t status = 0;
 
@@ -366,6 +367,7 @@ void my_app_on_db_init_complete(void) {
 
   // Khởi tạo chế độ hiển thị mặc định
   current_display_mode = DISPLAY_MODE_TIME;
+  // current_display_mode = DISPLAY_MODE_FABRIC_RECORD;
   last_update_time = 0;
   last_minute = 255;
 
@@ -584,7 +586,8 @@ void user_svc1_led_wr_ind_handler(ke_msg_id_t const msgid,
     bls_att_pushNotifyData(SVC1_IDX_LED_STATE_VAL, out_buffer, 2);
     // param_update_request(1);
     return;
-  case 0x06: // App có thể gửi metadata kích thước ảnh, firmware hiện dùng buffer cố định
+  case 0x06: // App có thể gửi metadata kích thước ảnh, firmware hiện dùng
+             // buffer cố định
     return;
   case 0xAA:
     do_img_save();
@@ -761,7 +764,8 @@ void user_svc2_wr_ind_handler(ke_msg_id_t const msgid,
                   current_display_mode);
     }
   } else if ((param->value[0] == 0xF0) && (param->length >= 3)) {
-    fabric_record_set_field(param->value[1], &param->value[2], param->length - 2);
+    fabric_record_set_field(param->value[1], &param->value[2],
+                            param->length - 2);
     arch_printf("Fabric field updated:%d\n", param->value[1]);
   }
 }
