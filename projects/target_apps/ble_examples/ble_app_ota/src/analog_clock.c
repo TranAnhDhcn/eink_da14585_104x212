@@ -140,16 +140,21 @@ void draw_calendar_with_analog_clock(uint32_t unix_time, bool force_redraw) {
 
     Paint_Clear(WHITE);
 
-    sprintf(title_buf, "%d / %d", year, month);
-    EPD_DrawUTF8(2, 0, 1, title_buf, EPD_ASCII_Font16, 0, BLACK, WHITE);
+    // Vẽ tiêu đề năm tháng
+    sprintf(title_buf, "%d / %d", month, year);
+    EPD_DrawUTF8(4, 0, 1, title_buf, EPD_ASCII_Font16, 0, BLACK, WHITE);
 
+    // Vẽ khung lịch
     Paint_DrawRectangle(1, 1, 113, 104, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);
-    Paint_DrawRectangle(x_start + 1, y_pos - 2, x_start + 7 * cell_width - 1,
-                        y_pos + 12, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 
+    // Vẽ khung tiêu đề các thứ trong tuần
+    Paint_DrawRectangle(1, y_pos - 1, 113, y_pos + 11, BLACK, DOT_PIXEL_1X1,
+                        DRAW_FILL_FULL);
+
+    // Vẽ tiêu đề các thứ trong tuần
     for (uint8_t i = 0; i < 7; i++) {
       uint8_t x_pos = x_start + i * cell_width;
-      EPD_DrawUTF8(x_pos + 4, y_pos + 1, 0, week_names_vi[i], EPD_ASCII_Font8,
+      EPD_DrawUTF8(x_pos + 2, y_pos - 2, 0, week_names_vi[i], EPD_ASCII_Font8,
                    0, WHITE, BLACK);
     }
 
@@ -160,7 +165,8 @@ void draw_calendar_with_analog_clock(uint32_t unix_time, bool force_redraw) {
       sprintf(day_buf, "%d", day);
 
       if (day == current_day) {
-        Paint_DrawRectangle(x_pos - 1, y_day - 1, x_pos + 13, y_day + 11, BLACK,
+        // Vẽ ô vuông đen cho ngày hiện tại
+        Paint_DrawRectangle(x_pos - 2, y_day, x_pos + 8, y_day + 13, BLACK,
                             DOT_PIXEL_1X1, DRAW_FILL_FULL);
         EPD_DrawUTF8(x_pos, y_day, 0, day_buf, EPD_ASCII_Font8, 0, WHITE,
                      BLACK);
