@@ -68,7 +68,7 @@ void draw_time_page(uint32_t unix_time, bool force_redraw) {
                    WHITE);
     Paint_SelectImage(epd_buffer);
     Paint_SetMirroring(MIRROR_VERTICAL);
-    Paint_Clear(WHITE);
+    Paint_Clear(WHITE); 
   } else {
     Paint_SelectImage(epd_buffer);
     Paint_SetMirroring(MIRROR_VERTICAL);

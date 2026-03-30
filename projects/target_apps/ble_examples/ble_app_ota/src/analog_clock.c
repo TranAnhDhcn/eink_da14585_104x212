@@ -9,6 +9,8 @@
  */
 
 #include "analog_clock.h"
+#include "EPD_2in13_V2.h"
+#include "Fonts/fonts.h"
 #include "GUI_Paint.h"
 #include "etime.h"
 #include "fonts.h"
@@ -18,6 +20,8 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+extern uint8_t epd_buffer[];
 
 /**
  * @brief Vẽ khung đồng hồ và các vạch chia
@@ -170,6 +174,18 @@ void draw_calendar_with_analog_clock(uint32_t unix_time, bool force_redraw) {
   tm_t tm;
   transformTime(unix_time, &tm);
 
+  if (force_redraw) {
+    Paint_NewImage(epd_buffer, EPD_2IN13_V2_WIDTH, EPD_2IN13_V2_HEIGHT, 270,
+                   WHITE);
+    Paint_SelectImage(epd_buffer);
+    Paint_SetMirroring(MIRROR_VERTICAL);
+    Paint_Clear(WHITE);
+  } else {
+    Paint_SelectImage(epd_buffer);
+    Paint_SetMirroring(MIRROR_VERTICAL);
+    Paint_Clear(WHITE);
+  }
+
   uint16_t year = tm.tm_year + YEAR0;
   uint8_t month = tm.tm_mon + 1;
   uint8_t current_day = tm.tm_mday;
@@ -181,17 +197,17 @@ void draw_calendar_with_analog_clock(uint32_t unix_time, bool force_redraw) {
     // Vẽ tiêu đề lịch
     char title_buf[20];
     sprintf(title_buf, "%d / %d", year, month);
-    EPD_DrawUTF8(20, 0, 1, title_buf, EPD_ASCII_Font16, 0, BLACK, WHITE);
+    EPD_DrawUTF8(2, 0, 1, title_buf, EPD_ASCII_Font16, 0, BLACK, WHITE);
 
     // Vẽ hàng tiêu đề các thứ trong tuần
     const char *week_names_vi[] = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
     uint8_t x_start = 0;
     uint8_t y_pos = 20;
-    uint8_t cell_width = 15;
+    uint8_t cell_width = 16;
 
     for (uint8_t i = 0; i < 7; i++) {
       uint8_t x_pos = x_start + i * cell_width;
-      EPD_DrawUTF8(x_pos + 8, y_pos, 0, week_names_vi[i], EPD_ASCII_Font8, 0,
+      EPD_DrawUTF8(x_pos + 2, y_pos, 0, week_names_vi[i], EPD_ASCII_Font8, 0,
                    BLACK, WHITE);
     }
 
@@ -230,16 +246,16 @@ void draw_calendar_with_analog_clock(uint32_t unix_time, bool force_redraw) {
     uint8_t col = first_day;
 
     for (uint8_t day = 1; day <= days_count; day++) {
-      uint8_t x_pos = x_start + col * cell_width + 8;
+      uint8_t x_pos = x_start + col * cell_width + 2;
       uint8_t y_pos = y_start + row * cell_height + 2;
 
       sprintf(day_buf, "%d", day);
 
       if (day == current_day) {
         // Hiển thị nghịch màu cho ngày hiện tại
-        Paint_DrawRectangle(x_start + col * cell_width + 6,
+        Paint_DrawRectangle(x_start + col * cell_width,
                             y_start + row * cell_height + 3,
-                            x_start + (col + 1) * cell_width - 3,
+                            x_start + (col + 1) * cell_width - 9,
                             y_start + (row + 1) * cell_height + 3, BLACK,
                             DOT_PIXEL_1X1, DRAW_FILL_FULL);
         EPD_DrawUTF8(x_pos, y_pos, 0, day_buf, EPD_ASCII_Font8, 0, WHITE,

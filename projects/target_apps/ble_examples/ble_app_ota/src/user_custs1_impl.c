@@ -366,8 +366,7 @@ void my_app_on_db_init_complete(void) {
   arch_printf("my_app_on_db_init_complete_modified\n");
 
   // Khởi tạo chế độ hiển thị mặc định
-  current_display_mode = DISPLAY_MODE_TIME;
-  // current_display_mode = DISPLAY_MODE_FABRIC_RECORD;
+  current_display_mode = DISPLAY_MODE_CALENDAR_ANALOG;
   last_update_time = 0;
   last_minute = 255;
 
