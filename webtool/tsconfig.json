@@ -15,7 +15,8 @@
     "isolatedModules": false,
     "noEmit": false,
     "outFile": "dist/app.js",
-    "jsx": "react"
+    "jsx": "react",
+    "sourceMap": true
   },
   "include": ["src"]
 }
