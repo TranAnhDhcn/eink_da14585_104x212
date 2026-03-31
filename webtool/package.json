@@ -7,8 +7,8 @@
   "scripts": {
     "start": "node ./scripts/start.mjs",
     "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.json",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d . --src \"{index.html,style.css,dist/**}\""
+    "predeploy": "npm run build && (if exist dist_gh rmdir /s /q dist_gh) && mkdir dist_gh && mkdir dist_gh\\dist && copy index.html dist_gh\\ && copy style.css dist_gh\\ && xcopy /e /y dist dist_gh\\dist",
+    "deploy": "cd dist_gh && git init && git add . && git commit -m \"Deploy Webtool\" && git push -f https://T-Anh17@github.com/T-Anh17/eink_da14585_104x212.git master:gh-pages"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "gh-pages": "^6.3.0"
   }
 }
