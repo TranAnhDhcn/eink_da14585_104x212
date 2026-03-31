@@ -1282,56 +1282,105 @@ textarea {
 }
 
 @media (max-width: 1180px) {
-  .operations-suite-grid,
-  .image-studio-grid,
   .workspace-grid,
-  .placeholder-grid,
-  .display-mode-grid {
+  .placeholder-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .operations-suite-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 }
 
 @media (max-width: 860px) {
   .topbar {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px 14px;
+    grid-template-columns: auto 1fr auto;
+    min-height: 60px;
+    padding: 0 12px;
+    gap: 8px;
   }
-
-  .topbar-left,
-  .topbar-right {
-    flex-wrap: wrap;
-  }
-
+  
   .topbar-title {
-    white-space: normal;
+    display: none;
+  }
+  
+  .topbar-copy span {
+    display: none;
+  }
+
+  .topbar-copy strong {
+    font-size: 0.85rem;
   }
 
   .ble-console-actions,
   .rotation-action-row,
-  .modal-footer-actions,
+  .modal-footer-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
   .image-tuning-card,
   .fabric-form {
     grid-template-columns: 1fr;
+  }
+  
+  .display-mode-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 640px) {
   .app-frame {
-    padding: 124px 14px 48px;
+    padding: 80px 12px 40px;
   }
 
   .panel-card,
   .modal-card,
-  .loading-card,
-  .sidebar-panel {
-    padding: 18px;
+  .loading-card {
+    padding: 16px;
+    border-radius: var(--radius-lg);
   }
 
   .sidebar-panel {
-    top: 112px;
-    left: 0;
-    bottom: 0;
-    width: min(300px, calc(100vw - 8px));
+    top: 60px;
+    width: 280px;
+  }
+  
+  .display-mode-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ble-console-top {
+    grid-template-columns: 44px 1fr;
+  }
+  
+  .image-studio-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .preview-canvas {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .primary-button, .ghost-button {
+    min-height: 44px; /* Larger touch targets */
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-brandline {
+    max-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  
+  .language-button strong {
+    display: none;
+  }
+  
+  .language-button {
+    padding: 0 8px;
   }
 }
